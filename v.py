@@ -17,6 +17,7 @@
 from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
+import glsvg
 
 # Accelerate startup by preventing importing numpy, which for some 
 # reason is loaded during shader compilation but never used.
@@ -826,12 +827,19 @@ def change_image(new_idx):
       returns the idx value of the next valid image
    '''
    global D,DD
-
+   k = 2 if ONE_SVG_PER_IMAGE else 1
    BUFF=10  # BUFFERED IMAGES
-   NUM_FILES    = (len(sys.argv)-1)
    new_idx_bak  = new_idx
+   NUM_FILES = (len(sys.argv) - 1) // k
    new_idx      = new_idx % NUM_FILES
-   new_filename = sys.argv[new_idx+1]
+   new_filename = sys.argv[k*new_idx+1]
+
+   if ONE_SVG_PER_IMAGE:
+      global svg
+      try:
+          svg = glsvg.SVGDoc(str(sys.argv[2*new_idx+2]))
+      except IOError:
+          pass
 
    from os import stat, path
    # check if the file was already read before
@@ -1628,7 +1636,9 @@ def pick_option(argv, option, default):
 def main():
 
     # get the svg file
-    svgfile =     pick_option(sys.argv, 'svg', None)
+    svgfile = pick_option(sys.argv, 'svg', None)
+    global ONE_SVG_PER_IMAGE
+    ONE_SVG_PER_IMAGE = pick_option(sys.argv, '2', '')
 
     # verify input
     if len(sys.argv) == 1:
